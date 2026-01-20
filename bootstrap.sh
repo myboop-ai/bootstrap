@@ -12,6 +12,29 @@ REPO="$1"
 SCRIPT="$2"
 BRANCH="${3:-main}"
 
-command -v gh &>/dev/null || { command -v brew &>/dev/null && brew install gh || { echo "Install gh: https://cli.github.com"; exit 1; }; }
-gh auth status &>/dev/null || gh auth login -h github.com -p https -w
+# Install Homebrew if needed
+if ! command -v brew &>/dev/null; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Install gh if needed
+if ! command -v gh &>/dev/null; then
+    echo "Installing GitHub CLI..."
+    brew install gh
+fi
+
+# Auth if needed
+if ! gh auth status &>/dev/null; then
+    echo ""
+    echo "To continue, you'll need to sign in to GitHub."
+    echo ""
+    echo "A code will appear below. Your browser will open - paste the code there."
+    echo ""
+    gh auth login -h github.com -p https -w
+    gh auth setup-git
+fi
+
+# Run the private script
 gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d | bash
