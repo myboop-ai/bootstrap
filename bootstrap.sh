@@ -1,5 +1,14 @@
 #!/bin/bash
 set -e
+
+# Check for macOS
+if [[ "$(uname)" != "Darwin" ]]; then
+    echo ""
+    echo "This script currently only supports macOS."
+    echo ""
+    exit 1
+fi
+
 if [ -z "$1" ] || [ -z "$2" ]; then
     echo ""
     echo "Error: The command appears incomplete."
@@ -25,11 +34,25 @@ if ! command -v brew &>/dev/null; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     }
     
-    # Add brew to PATH for this session
+    # Add brew to PATH for this session and future sessions
     if [ -f /opt/homebrew/bin/brew ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
+        BREW_SHELLENV='eval "$(/opt/homebrew/bin/brew shellenv)"'
     elif [ -f /usr/local/bin/brew ]; then
         eval "$(/usr/local/bin/brew shellenv)"
+        BREW_SHELLENV='eval "$(/usr/local/bin/brew shellenv)"'
+    fi
+
+    # Add to shell profile if not already there
+    SHELL_PROFILE="$HOME/.zprofile"
+    if [ -f "$HOME/.bash_profile" ] && [ ! -f "$HOME/.zprofile" ]; then
+        SHELL_PROFILE="$HOME/.bash_profile"
+    fi
+
+    if ! grep -q 'brew shellenv' "$SHELL_PROFILE" 2>/dev/null; then
+        echo "" >> "$SHELL_PROFILE"
+        echo '# Homebrew' >> "$SHELL_PROFILE"
+        echo "$BREW_SHELLENV" >> "$SHELL_PROFILE"
     fi
 fi
 
