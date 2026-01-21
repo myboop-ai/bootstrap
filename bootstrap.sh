@@ -26,13 +26,7 @@ if ! command -v brew &>/dev/null; then
     echo ""
     echo "Installing Homebrew (you may be prompted for your password)..."
     echo ""
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
-        echo ""
-        echo "Homebrew installation needs admin access."
-        echo "Please enter your password when prompted."
-        echo ""
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    }
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
     # Add brew to PATH for this session and future sessions
     if [ -f /opt/homebrew/bin/brew ]; then
