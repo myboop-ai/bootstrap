@@ -63,7 +63,7 @@ if ! gh auth status &>/dev/null; then
     echo ""
     echo "A code will appear below. Your browser will open - paste the code there."
     echo ""
-    gh auth login -h github.com -p https -w
+    gh auth login -h github.com -p https -w -s admin:public_key
     gh auth setup-git
 fi
 
