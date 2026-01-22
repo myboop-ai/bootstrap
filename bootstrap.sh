@@ -26,6 +26,8 @@ if ! command -v brew &>/dev/null; then
     echo ""
     echo "Installing Homebrew (you may be prompted for your password)..."
     echo ""
+    # Cache sudo credentials before running Homebrew in non-interactive mode
+    sudo -v
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
     # Add brew to PATH for this session and future sessions
