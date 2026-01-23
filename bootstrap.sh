@@ -69,5 +69,17 @@ if ! gh auth status &>/dev/null; then
     gh auth setup-git
 fi
 
-# Run the private script
-gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d | bash
+# Download and run the target file
+if [[ "$SCRIPT" == *.zip ]]; then
+    # GUI installer - download, unzip, and open
+    echo ""
+    echo "Downloading installer..."
+    gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d > /tmp/boop-installer.zip
+    unzip -q /tmp/boop-installer.zip -d /tmp/
+    rm /tmp/boop-installer.zip
+    echo "Opening installer..."
+    open "/tmp/Boop Assistant Installer.app"
+else
+    # Shell script - download and execute
+    gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d | bash
+fi
