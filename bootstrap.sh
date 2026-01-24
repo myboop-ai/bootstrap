@@ -26,11 +26,9 @@ if ! command -v brew &>/dev/null; then
     echo ""
     echo "Installing Homebrew (you may be prompted for your password)..."
     echo ""
-    # Cache sudo credentials before running Homebrew in non-interactive mode
     sudo -v
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    
-    # Add brew to PATH for this session and future sessions
+
     if [ -f /opt/homebrew/bin/brew ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
         BREW_SHELLENV='eval "$(/opt/homebrew/bin/brew shellenv)"'
@@ -39,7 +37,6 @@ if ! command -v brew &>/dev/null; then
         BREW_SHELLENV='eval "$(/usr/local/bin/brew shellenv)"'
     fi
 
-    # Add to shell profile if not already there
     SHELL_PROFILE="$HOME/.zprofile"
     if [ -f "$HOME/.bash_profile" ] && [ ! -f "$HOME/.zprofile" ]; then
         SHELL_PROFILE="$HOME/.bash_profile"
@@ -63,23 +60,28 @@ if ! gh auth status &>/dev/null; then
     echo ""
     echo "To continue, you'll need to sign in to GitHub."
     echo ""
-    echo "A code will appear below. Your browser will open - paste the code there."
-    echo ""
     gh auth login -h github.com -p https -w -s admin:public_key
     gh auth setup-git
 fi
 
 # Download and run the target file
 if [[ "$SCRIPT" == *.zip ]]; then
-    # GUI installer - download, unzip, and open
     echo ""
-    echo "Downloading installer..."
-    gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d > /tmp/boop-installer.zip
-    unzip -q /tmp/boop-installer.zip -d /tmp/
-    rm /tmp/boop-installer.zip
-    echo "Opening installer..."
-    open "/tmp/Boop Assistant Installer.app"
+    echo "Downloading..."
+    TMPDIR=$(mktemp -d)
+    gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d > "$TMPDIR/download.zip"
+    unzip -q "$TMPDIR/download.zip" -d "$TMPDIR"
+    rm "$TMPDIR/download.zip"
+
+    # Find and open the extracted app
+    APP_PATH=$(find "$TMPDIR" -maxdepth 1 -name "*.app" -type d | head -1)
+    if [ -n "$APP_PATH" ]; then
+        echo "Opening $(basename "$APP_PATH")..."
+        open "$APP_PATH"
+    else
+        echo "Error: No .app found in zip"
+        exit 1
+    fi
 else
-    # Shell script - download and execute
     gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d | bash
 fi
