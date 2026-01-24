@@ -73,11 +73,18 @@ if [[ "$SCRIPT" == *.zip ]]; then
     unzip -q "$TMPDIR/download.zip" -d "$TMPDIR"
     rm "$TMPDIR/download.zip"
 
-    # Find and open the extracted app
+    # Find the extracted app
     APP_PATH=$(find "$TMPDIR" -maxdepth 1 -name "*.app" -type d | head -1)
     if [ -n "$APP_PATH" ]; then
-        echo "Opening $(basename "$APP_PATH")..."
-        open "$APP_PATH"
+        # Install app to /Applications
+        APP_NAME=$(basename "$APP_PATH")
+        echo "Installing $APP_NAME..."
+        sudo rm -rf "/Applications/$APP_NAME"
+        sudo cp -R "$APP_PATH" "/Applications/"
+
+        # Open the installed app
+        echo "Opening $APP_NAME..."
+        open "/Applications/$APP_NAME"
     else
         echo "Error: No .app found in zip"
         exit 1
