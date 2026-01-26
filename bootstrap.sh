@@ -108,6 +108,9 @@ if [[ "$SCRIPT" == *.zip ]]; then
         sudo rm -rf "/Applications/$APP_NAME"
         sudo cp -R "$APP_PATH" "/Applications/"
 
+        # Pass branch to the app via temp file (app reads and deletes it)
+        echo "$BRANCH" > /tmp/bootstrap-app-branch
+
         # Open the installed app
         echo "Opening $APP_NAME..."
         open "/Applications/$APP_NAME"
