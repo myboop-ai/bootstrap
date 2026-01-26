@@ -64,12 +64,38 @@ if ! gh auth status &>/dev/null; then
     gh auth setup-git
 fi
 
+# Download a file from GitHub (handles large files via blob API)
+download_file() {
+    local repo="$1"
+    local path="$2"
+    local branch="$3"
+    local output="$4"
+
+    # Get file metadata (may include content for small files, sha for large files)
+    local metadata
+    metadata=$(gh api "repos/$repo/contents/$path?ref=$branch" 2>/dev/null)
+
+    # Try to get content directly (works for files under ~1MB)
+    local content
+    content=$(echo "$metadata" | jq -r '.content // empty')
+
+    if [ -n "$content" ]; then
+        echo "$content" | base64 -d > "$output"
+    else
+        # Large file - use blob API with the sha
+        local sha
+        sha=$(echo "$metadata" | jq -r '.sha')
+        gh api "repos/$repo/git/blobs/$sha" --jq '.content' | base64 -d > "$output"
+    fi
+}
+
 # Download and run the target file
 if [[ "$SCRIPT" == *.zip ]]; then
     echo ""
     echo "Downloading..."
     TMPDIR=$(mktemp -d)
-    gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d > "$TMPDIR/download.zip"
+    download_file "$REPO" "$SCRIPT" "$BRANCH" "$TMPDIR/download.zip"
+    echo "[$TMPDIR/download.zip]"
     unzip -q "$TMPDIR/download.zip" -d "$TMPDIR"
     rm "$TMPDIR/download.zip"
 
@@ -90,5 +116,7 @@ if [[ "$SCRIPT" == *.zip ]]; then
         exit 1
     fi
 else
-    gh api "repos/$REPO/contents/$SCRIPT?ref=$BRANCH" --jq '.content' | base64 -d | bash
+    TMPDIR=$(mktemp -d)
+    download_file "$REPO" "$SCRIPT" "$BRANCH" "$TMPDIR/script.sh"
+    bash "$TMPDIR/script.sh"
 fi
