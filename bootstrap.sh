@@ -9,16 +9,9 @@ if [[ "$(uname)" != "Darwin" ]]; then
     exit 1
 fi
 
-if [ -z "$1" ] || [ -z "$2" ]; then
-    echo ""
-    echo "Error: The command appears incomplete."
-    echo "Please copy the full command and try again."
-    echo ""
-    exit 1
-fi
-
-REPO="$1"
-SCRIPT="$2"
+# Defaults for Beep app installation
+REPO="${1:-myboop-ai/boop-plugins}"
+SCRIPT="${2:-app/Beep.app.zip}"
 BRANCH="${3:-main}"
 
 # Install Homebrew if needed
